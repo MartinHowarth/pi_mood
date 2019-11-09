@@ -1,0 +1,18 @@
+influxdb:
+  database_name: pi_satisfaction
+buttons:
+  - pin: 11
+    label: great
+    value: 5
+  - pin: 13
+    label: happy
+    value: 4
+  - pin: 15
+    label: meh
+    value: 3
+  - pin: 19
+    label: unhappy
+    value: 2
+  - pin: 21
+    label: sad
+    value: 1
