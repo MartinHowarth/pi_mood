@@ -18,7 +18,6 @@ class ButtonModel(Model):
     # GPIO pin that the button is connected to
     pin = IntType(required=True)  # type: int
     label = StringType(required=True)  # type: str
-    # Value to allow averaging of data from multiple buttons.
     value = IntType(required=True)  # type: int
 
 
