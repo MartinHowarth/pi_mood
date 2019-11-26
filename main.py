@@ -148,7 +148,6 @@ def post_to_influxdb_and_flash_led_callback(config: OverallModel):
 
 
 def main(config: OverallModel) -> None:
-    # button_callback = post_to_influxdb_callback(config.influxdb)
     button_callback = post_to_influxdb_and_flash_led_callback(config)
     with gpio_context(config, button_callback):
         while True:

@@ -1,5 +1,5 @@
 influxdb:
-  database_name: pi_satisfaction
+  database_name: pi_mood
 buttons:
   - pin: 21
     label: great
