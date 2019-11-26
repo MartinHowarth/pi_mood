@@ -1,18 +1,20 @@
 influxdb:
   database_name: pi_satisfaction
 buttons:
-  - pin: 11
+  - pin: 21
     label: great
     value: 5
-  - pin: 13
+  - pin: 19
     label: happy
     value: 4
   - pin: 15
     label: meh
     value: 3
-  - pin: 19
+  - pin: 13
     label: unhappy
     value: 2
-  - pin: 21
+  - pin: 11
     label: sad
     value: 1
+led:
+  pin: 37

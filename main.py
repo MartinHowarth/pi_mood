@@ -21,6 +21,12 @@ class ButtonModel(Model):
     value = IntType(required=True)  # type: int
 
 
+class LedModel(Model):
+    # GPIO pin that the LED is connected to
+    pin = IntType(required=True)  # type: int
+    flash_time_ms = IntType(required=True, default=200)  # type: int
+
+
 class InfluxdbModel(Model):
     database_name = StringType(required=True)  # type: str
     measurement_name = StringType(required=True, default="pi_mood")  # type: str
@@ -28,6 +34,7 @@ class InfluxdbModel(Model):
 
 class OverallModel(Model):
     buttons = ListType(ModelType(ButtonModel))  # type: List[ButtonModel]
+    led = ModelType(LedModel)  # type: LedModel
     # Milliseconds after initial button press registration to ignore any more push events from that button
     bouncetime = IntType(default=200)  # type: int
 
@@ -86,6 +93,14 @@ def post_to_influxdb_callback(config: InfluxdbModel) -> Callable[[ButtonModel], 
     return callback
 
 
+def flash_led(led: LedModel):
+    logger.debug("Turning LED on.")
+    GPIO.output(led.pin, GPIO.HIGH)
+    time.sleep(led.flash_time_ms / 1000.0)
+    GPIO.output(led.pin, GPIO.LOW)
+    logger.debug("Turned LED off.")
+
+
 def callback_for_button(button: ButtonModel, handler: Callable[[ButtonModel], None]) -> Callable[[int], None]:
     def callback(pin: int) -> None:
         logger.info(f"Button {button.label!r} was pressed with args: {pin}")
@@ -103,6 +118,9 @@ def init_gpio(physical_config: OverallModel, button_handler: Callable) -> None:
         GPIO.setup(button.pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         callback = callback_for_button(button, button_handler)
         GPIO.add_event_detect(button.pin, GPIO.RISING, callback=callback, bouncetime=physical_config.bouncetime)
+
+    GPIO.setup(physical_config.led.pin, GPIO.OUT)
+    GPIO.output(physical_config.led.pin, GPIO.LOW)
     logger.info("GPIO init complete.")
 
 
@@ -120,8 +138,18 @@ def gpio_context(physical_config: OverallModel, button_handler: Callable) -> Non
         close_gpio()
 
 
+def post_to_influxdb_and_flash_led_callback(config: OverallModel):
+    influxdb_callback = post_to_influxdb_callback(config.influxdb)
+
+    def callback(button: ButtonModel) -> None:
+        influxdb_callback(button)
+        flash_led(config.led)
+    return callback
+
+
 def main(config: OverallModel) -> None:
-    button_callback = post_to_influxdb_callback(config.influxdb)
+    # button_callback = post_to_influxdb_callback(config.influxdb)
+    button_callback = post_to_influxdb_and_flash_led_callback(config)
     with gpio_context(config, button_callback):
         while True:
             time.sleep(300)
